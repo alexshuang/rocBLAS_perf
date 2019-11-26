@@ -5,10 +5,10 @@ set -ex
 istart=$(date +%s)
 
 TENSILE_DIR=src/Tensile
-OUT_DIR=${1:-out}
+DEVICE=${1:-0}
+OUT_DIR=${2:-out}
 CONF_DIR=$OUT_DIR/configs
 BUILD_DIR=$OUT_DIR/build
-DEVICE=4
 
 rm -rf ${OUT_DIR}
 mkdir -p $CONF_DIR
