@@ -2,11 +2,13 @@
 
 set -ex
 
+istart=$(date +%s)
+
 TENSILE_DIR=src/Tensile
 OUT_DIR=${1:-out}
 CONF_DIR=$OUT_DIR/configs
 BUILD_DIR=$OUT_DIR/build
-DEVICE=0
+DEVICE=4
 
 rm -rf ${OUT_DIR}
 mkdir -p $CONF_DIR
@@ -40,21 +42,18 @@ do
 	$TENSILE_DIR/Tensile/bin/Tensile $o $OUT_PATH
 done
 
-exit 0
-
 # merge logic
 ROCBLAS_DIR=src/rocBLAS
+MERGE_TOOL=$TENSILE_DIR/Tensile/Utilities/merge_rocblas_yaml_files.py
 ARCHIVE_DIR=$ROCBLAS_DIR/library/src/blas3/Tensile/Logic/archive
 ASM_FULL_DIR=$ROCBLAS_DIR/library/src/blas3/Tensile/Logic/asm_full
 WORK_DIR=$BUILD_DIR/workdir
 BASE_DIR=$WORK_DIR/base
 NEW_DIR=$WORK_DIR/new
 MERGED_DIR=$WORK_DIR/merged
-MASSAGED_DIR=$WORK_DIR/massaged
 mkdir -p $BASE_DIR
 mkdir -p $NEW_DIR
 mkdir -p $MERGED_DIR
-mkdir -p $MASSAGED_DIR
 
 if [ ! -d "$ROCBLAS_DIR" ]; then
 	git clone https://github.com/ROCmSoftwarePlatform/rocBLAS.git $ROCBLAS_DIR
@@ -65,18 +64,30 @@ YAMLS=`find $BUILD_DIR/*/3_LibraryLogic -name *.yaml`
 for o in $YAMLS
 do
 	FILE_NAME=${o##*/}
-	BASE_FILE=`find $ARCHIVE_DIR -name $FILE_NAME`
-	if [ "$BASE_FILE" -eq "" ]; then
-		BASE_FILE=`find $ASM_FULL_DIR -name $FILE_NAME`
+	BASE_FILE=$ARCHIVE_DIR/$FILE_NAME
+	if [ ! -f "$BASE_FILE" ]; then
+		BASE_FILE=$ASM_FULL_DIR/$FILE_NAME
 	fi
 	cp $o $NEW_DIR -v
 	cp $BASE_FILE $BASE_DIR -v
 done
 
+python3 $MERGE_TOOL $BASE_DIR $NEW_DIR $MERGED_DIR
 
+# massage logic
+MASSAGE_TOOL=$ROCBLAS_DIR/library/src/blas3/Tensile/Logic/archive/massage.py
+MASSAGED_DIR=$WORK_DIR/massaged
+mkdir -p $MASSAGED_DIR
 
+python3 $MASSAGE_TOOL $MERGED_DIR $MASSAGED_DIR
 
+# build rocBLAS
+cd $ROCBLAS_DIR && ./install.sh -dc && cd -
 
+iend=$(date +%s)
 
-
+echo ""
+echo ""
+echo "Build done."
+echo "The total time: $(( iend - istart )) seconds."
 
