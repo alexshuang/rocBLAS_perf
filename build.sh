@@ -32,6 +32,9 @@ do
 	sed -i "s/^\(  PinClocks:\).*/\1 False/g" $CONF
 done
 
+# pinclock
+/opt/rocm/bin/rocm-smi -d $DEVICE --setsclk 5
+
 # tensile training
 CONFIGS=`ls $CONF_DIR/*.yaml`
 
