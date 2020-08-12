@@ -6,9 +6,9 @@ istart=$(date +%s)
 
 TENSILE_DIR=src/Tensile
 DEVICE=0
-#DEVICE=${1:-0}
 CONFIGS=$1
-OUT_DIR=${2:-out}
+DEVICE=${2:-1}
+OUT_DIR=${3:-out}
 BUILD_DIR=$OUT_DIR/build
 
 if [ $# -lt 1 ]; then
@@ -45,7 +45,7 @@ done
 
 # merge logic
 ROCBLAS_DIR=src/rocBLAS
-MERGE_TOOL=$TENSILE_DIR/Tensile/Utilities/merge_rocblas_yaml_files.py
+MERGE_TOOL=$TENSILE_DIR/Tensile/Utilities/archive/merge_rocblas_yaml_files.py
 ARCHIVE_DIR=$ROCBLAS_DIR/library/src/blas3/Tensile/Logic/archive
 ASM_FULL_DIR=$ROCBLAS_DIR/library/src/blas3/Tensile/Logic/asm_full
 WORK_DIR=$BUILD_DIR/workdir
